@@ -33,10 +33,8 @@ const loginScreen = document.getElementById("loginScreen");
 const loginForm = document.getElementById("loginForm");
 const registerForm = document.getElementById("registerForm");
 const loginEmail = document.getElementById("loginEmail");
-const loginPassword = document.getElementById("loginPassword");
 const registerEmail = document.getElementById("registerEmail");
 const registerDisplayName = document.getElementById("registerDisplayName");
-const registerPassword = document.getElementById("registerPassword");
 const loginError = document.getElementById("loginError");
 const registerError = document.getElementById("registerError");
 const rememberMe = document.getElementById("rememberMe");
@@ -323,11 +321,10 @@ const translations = {
         createOne: "Criar uma",
         signIn: "Entrar",
         userExists: "Esse email já está cadastrado.",
-        invalidLogin: "Email ou senha incorretos.",
+        invalidLogin: "Email não encontrado. Crie uma conta.",
         fillFields: "Preencha todos os campos.",
         invalidEmail: "Email inválido.",
-        shortName: "Nome precisa ter pelo menos 2 caracteres.",
-        shortPass: "Senha precisa ter pelo menos 4 caracteres."
+        shortName: "Nome precisa ter pelo menos 2 caracteres."
     },
     en: {
         title: "Cube Timer",
@@ -410,11 +407,10 @@ const translations = {
         createOne: "Create one",
         signIn: "Sign in",
         userExists: "That email is already registered.",
-        invalidLogin: "Invalid email or password.",
+        invalidLogin: "Email not found. Create an account.",
         fillFields: "Please fill in all fields.",
         invalidEmail: "Invalid email.",
-        shortName: "Display name must be at least 2 characters.",
-        shortPass: "Password must be at least 4 characters."
+        shortName: "Display name must be at least 2 characters."
     },
     es: {
         title: "Cubo Timer",
@@ -497,11 +493,10 @@ const translations = {
         createOne: "Crear una",
         signIn: "Entrar",
         userExists: "Ese email ya está registrado.",
-        invalidLogin: "Email o contraseña incorrectos.",
+        invalidLogin: "Email no encontrado. Crea una cuenta.",
         fillFields: "Completa todos los campos.",
         invalidEmail: "Email inválido.",
-        shortName: "El nombre debe tener al menos 2 caracteres.",
-        shortPass: "La contraseña debe tener al menos 4 caracteres."
+        shortName: "El nombre debe tener al menos 2 caracteres."
     }
 };
 
@@ -539,26 +534,24 @@ function isValidEmail(email) {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
-function registerUser(email, displayName, password) {
+function registerUser(email, displayName) {
     const users = getUsers();
     const key = email.trim().toLowerCase();
     if (users[key]) return { ok: false, error: "userExists" };
     users[key] = {
         email: key,
         displayName: displayName.trim(),
-        pass: simpleHash(password),
         created: Date.now()
     };
     saveUsers(users);
     return { ok: true };
 }
 
-function authenticate(email, password) {
+function authenticate(email) {
     const users = getUsers();
     const key = email.trim().toLowerCase();
     const user = users[key];
     if (!user) return null;
-    if (user.pass !== simpleHash(password)) return null;
     return user;
 }
 
@@ -1715,8 +1708,7 @@ logoutBtn.addEventListener("click", event => {
 function handleLogin(event) {
     event.preventDefault();
     const email = loginEmail.value.trim();
-    const pass = loginPassword.value;
-    if (!email || !pass) {
+    if (!email) {
         loginError.textContent = t("fillFields");
         return;
     }
@@ -1724,7 +1716,7 @@ function handleLogin(event) {
         loginError.textContent = t("invalidEmail");
         return;
     }
-    const user = authenticate(email, pass);
+    const user = authenticate(email);
     if (!user) {
         loginError.textContent = t("invalidLogin");
         return;
@@ -1740,8 +1732,7 @@ function handleRegister(event) {
     event.preventDefault();
     const email = registerEmail.value.trim();
     const displayName = registerDisplayName.value.trim();
-    const pass = registerPassword.value;
-    if (!email || !displayName || !pass) {
+    if (!email || !displayName) {
         registerError.textContent = t("fillFields");
         return;
     }
@@ -1753,11 +1744,7 @@ function handleRegister(event) {
         registerError.textContent = t("shortName");
         return;
     }
-    if (pass.length < 4) {
-        registerError.textContent = t("shortPass");
-        return;
-    }
-    const result = registerUser(email, displayName, pass);
+    const result = registerUser(email, displayName);
     if (!result.ok) {
         registerError.textContent = t(result.error);
         return;
