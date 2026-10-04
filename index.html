@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rubik-Timer</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Login -->
+    <div class="login-screen" id="loginScreen">
+        <div class="login-card">
+            <div class="logo">⏱</div>
+            <h2 id="loginTitle" data-i18n-login="loginTitle">Entrar</h2>
+            <p class="login-sub" data-i18n-login="loginSub">Seus dados ficam salvos neste dispositivo</p>
+
+            <form id="loginForm" autocomplete="on">
+                <div class="login-field">
+                    <label data-i18n-login="username">Usuário</label>
+                    <input type="text" id="loginUsername" autocomplete="username" required>
+                </div>
+                <div class="login-field">
+                    <label data-i18n-login="password">Senha</label>
+                    <input type="password" id="loginPassword" autocomplete="current-password" required>
+                </div>
+                <div class="remember-row">
+                    <input type="checkbox" id="rememberMe" checked>
+                    <label for="rememberMe" data-i18n-login="rememberMe">Manter conectado</label>
+                </div>
+                <div class="login-error" id="loginError"></div>
+                <div class="login-actions">
+                    <button type="submit" class="primary" id="loginSubmit" data-i18n-login="loginBtn">Entrar</button>
+                </div>
+                <div class="login-toggle">
+                    <span data-i18n-login="noAccount">Não tem conta?</span>
+                    <a href="#" id="toRegister" data-i18n-login="createOne">Criar uma</a>
+                </div>
+            </form>
+
+            <form id="registerForm" style="display:none;" autocomplete="on">
+                <div class="login-field">
+                    <label data-i18n-login="username">Usuário</label>
+                    <input type="text" id="registerUsername" autocomplete="username" required>
+                </div>
+                <div class="login-field">
+                    <label data-i18n-login="password">Senha</label>
+                    <input type="password" id="registerPassword" autocomplete="new-password" required>
+                </div>
+                <div class="remember-row">
+                    <input type="checkbox" id="rememberMeReg" checked>
+                    <label for="rememberMeReg" data-i18n-login="rememberMe">Manter conectado</label>
+                </div>
+                <div class="login-error" id="registerError"></div>
+                <div class="login-actions">
+                    <button type="submit" class="primary" id="registerSubmit" data-i18n-login="registerBtn">Criar conta</button>
+                </div>
+                <div class="login-toggle">
+                    <span data-i18n-login="hasAccount">Já tem conta?</span>
+                    <a href="#" id="toLogin" data-i18n-login="signIn">Entrar</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="app" id="appRoot" style="display:none;">
+        <header>
+            <div class="brand">
+                <div class="logo">⏱</div>
+                <div>
+                    <h1 data-i18n="title">Cubo Timer</h1>
+                    <div class="subtitle" data-i18n="subtitle">Speedcubing timer</div>
+                </div>
+            </div>
+            <div class="header-actions">
+                <div class="user-badge">
+                    <strong id="userBadgeName"></strong>
+                    <button id="logoutBtn" data-i18n="logout">Sair</button>
+                </div>
+                <button id="languageButton">🇧🇷 PT</button>
+                <button id="themeButton">☀️</button>
+                <button id="settingsButton">⚙️</button>
+                <button id="newScramble" data-i18n="newScramble">Novo scramble</button>
+            </div>
+        </header>
+
+        <div class="scramble-box">
+            <div class="scramble-label">
+                <span data-i18n="scramble">Scramble</span>
+            </div>
+            <div class="scramble" id="scramble"></div>
+        </div>
+
+        <div class="scramble-history-box" id="scrambleHistoryBox">
+            <button class="scramble-history-toggle" id="scrambleHistoryToggle" type="button">
+                <span data-i18n="scrambleHistory">Histórico de scrambles</span>
+                <span class="chevron">▾</span>
+            </button>
+            <div class="scramble-history-list" id="scrambleHistoryList">
+                <div class="scramble-history-empty" data-i18n="noScrambleHistory">Nenhum scramble ainda.</div>
+            </div>
+        </div>
+
+        <div class="timer-panel" id="timerPanel">
+            <div class="status" id="status" data-i18n="ready">Pronto</div>
+            <div class="comparison-toast" id="comparisonToast"></div>
+            <div class="time" id="time">0.00</div>
+            <div class="timer-stats">
+                <div class="timer-stat">
+                    <span data-i18n="best">Best:</span>
+                    <strong id="best">—</strong>
+                </div>
+                <div class="timer-stat">
+                    <span>Ao5:</span>
+                    <strong id="ao5">—</strong>
+                </div>
+                <div class="timer-stat">
+                    <span>Ao12:</span>
+                    <strong id="ao12">—</strong>
+                </div>
+                <div class="timer-stat sub">
+                    <span data-i18n="last10">Últimas 10:</span>
+                    <strong id="last10">—</strong>
+                </div>
+                <div class="timer-stat sub">
+                    <span data-i18n="sub">Sub:</span>
+                    <strong id="sub">—</strong>
+                </div>
+            </div>
+            <div class="hint" id="hint" data-i18n="holdToInspect">
+                Pressione uma letra para começar a inspeção
+            </div>
+        </div>
+
+        <div class="controls">
+            <button id="reset" data-i18n="reset">Resetar</button>
+            <button id="clearSession" data-i18n="clearSession">Limpar sessão</button>
+        </div>
+
+        <div class="history">
+            <div class="history-tabs">
+                <button class="history-tab active" id="sessionTab" data-i18n="session">
+                    Sessão atual
+                </button>
+                <button class="history-tab" id="todayTab" data-i18n="today">
+                    Hoje
+                </button>
+                <button class="history-tab" id="historyTab" data-i18n="history">
+                    Histórico
+                </button>
+            </div>
+            <div class="history-head">
+                <div class="history-title" id="historyTitle">Sessão atual</div>
+                <div class="history-actions">
+                    <button class="copy-btn" id="copySession" data-i18n="copySession">
+                        Copiar sessão
+                    </button>
+                    <button class="copy-btn" id="copyToday" data-i18n="copyToday" style="display:none;">
+                        Copiar hoje
+                    </button>
+                    <button class="copy-btn" id="copyHistory" data-i18n="copyHistory" style="display:none;">
+                        Copiar histórico
+                    </button>
+                    <button class="clear-history" id="clearHistory" data-i18n="clearHistory">
+                        Limpar histórico
+                    </button>
+                </div>
+            </div>
+            <div id="solves">
+                <div class="empty" data-i18n="noSolves">Nenhuma solve ainda.</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-background" id="settingsModal">
+        <div class="modal">
+            <div class="modal-header">
+                <div class="modal-title" data-i18n="settings">Configurações</div>
+                <button class="close" id="closeSettings">×</button>
+            </div>
+            <div class="setting">
+                <div>
+                    <div class="setting-name" data-i18n="inspectionTime">Tempo de inspeção</div>
+                    <div class="setting-description" data-i18n="inspectionDescription">
+                        Tempo para analisar o cubo antes da solve
+                    </div>
+                </div>
+                <input type="number" id="inspectionInput" min="0" max="60" step="1" value="15">
+            </div>
+            <div class="setting">
+                <div>
+                    <div class="setting-name" data-i18n="pauseKey">Tecla de pausa</div>
+                    <div class="setting-description" data-i18n="pauseKeyDescription">
+                        Tecla usada para pausar e continuar a solve
+                    </div>
+                </div>
+                <div class="key-input">
+                    <input type="text" id="pauseKeyInput" maxlength="20" value="P">
+                    <button id="setPauseKey" data-i18n="setKey">Definir</button>
+                </div>
+            </div>
+            <div class="setting">
+                <div>
+                    <div class="setting-name" data-i18n="accentColor">Cor de destaque</div>
+                    <div class="setting-description" data-i18n="accentDescription">
+                        Tom da interface inteira (versão clara e escura)
+                    </div>
+                </div>
+                <div class="accent-swatches" id="accentSwatches"></div>
+            </div>
+            <div class="setting">
+                <div>
+                    <div class="setting-name" data-i18n="language">Idioma</div>
+                    <div class="setting-description" data-i18n="languageDescription">
+                        Altera o idioma da interface
+                    </div>
+                </div>
+                <select id="languageSelect">
+                    <option value="pt">Português</option>
+                    <option value="en">English</option>
+                    <option value="es">Español</option>
+                </select>
+            </div>
+            <div class="setting">
+                <div>
+                    <div class="setting-name" data-i18n="theme">Tema</div>
+                    <div class="setting-description" data-i18n="themeDescription">
+                        Escolha entre tema claro e escuro
+                    </div>
+                </div>
+                <select id="themeSelect">
+                    <option value="dark">Escuro</option>
+                    <option value="light">Claro</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <div class="copy-feedback" id="copyFeedback"></div>
+
+    <script src="source.js"></script>
+</body>
+</html>
