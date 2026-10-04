@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rubik-Timer</title>
+    <meta name="google-site-verification" content="E4fjLGWzG6KMvmyXW0ASEJQ8ShIHJpMI0WJeWLIBPbE" />
+    <title>Cubo Timer</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -16,47 +17,51 @@
 
             <form id="loginForm" autocomplete="on">
                 <div class="login-field">
-                    <label data-i18n-login="username">Usuário</label>
-                    <input type="text" id="loginUsername" autocomplete="username" required>
+                    <label data-i18n-login="email">Email</label>
+                    <input type="email" id="loginEmail" autocomplete="email" required>
                 </div>
                 <div class="login-field">
-                    <label data-i18n-login="password">Senha</label>
+                    <label data-i18n-login="password">Password</label>
                     <input type="password" id="loginPassword" autocomplete="current-password" required>
                 </div>
                 <div class="remember-row">
                     <input type="checkbox" id="rememberMe" checked>
-                    <label for="rememberMe" data-i18n-login="rememberMe">Manter conectado</label>
+                    <label for="rememberMe" data-i18n-login="rememberMe">Stay signed in</label>
                 </div>
                 <div class="login-error" id="loginError"></div>
                 <div class="login-actions">
-                    <button type="submit" class="primary" id="loginSubmit" data-i18n-login="loginBtn">Entrar</button>
+                    <button type="submit" class="primary" id="loginSubmit" data-i18n-login="loginBtn">Sign in</button>
                 </div>
                 <div class="login-toggle">
-                    <span data-i18n-login="noAccount">Não tem conta?</span>
-                    <a href="#" id="toRegister" data-i18n-login="createOne">Criar uma</a>
+                    <span data-i18n-login="noAccount">Don't have an account?</span>
+                    <a href="#" id="toRegister" data-i18n-login="createOne">Create one</a>
                 </div>
             </form>
 
             <form id="registerForm" style="display:none;" autocomplete="on">
                 <div class="login-field">
-                    <label data-i18n-login="username">Usuário</label>
-                    <input type="text" id="registerUsername" autocomplete="username" required>
+                    <label data-i18n-login="email">Email</label>
+                    <input type="email" id="registerEmail" autocomplete="email" required>
                 </div>
                 <div class="login-field">
-                    <label data-i18n-login="password">Senha</label>
+                    <label data-i18n-login="displayName">Display name</label>
+                    <input type="text" id="registerDisplayName" autocomplete="nickname" required>
+                </div>
+                <div class="login-field">
+                    <label data-i18n-login="password">Password</label>
                     <input type="password" id="registerPassword" autocomplete="new-password" required>
                 </div>
                 <div class="remember-row">
                     <input type="checkbox" id="rememberMeReg" checked>
-                    <label for="rememberMeReg" data-i18n-login="rememberMe">Manter conectado</label>
+                    <label for="rememberMeReg" data-i18n-login="rememberMe">Stay signed in</label>
                 </div>
                 <div class="login-error" id="registerError"></div>
                 <div class="login-actions">
-                    <button type="submit" class="primary" id="registerSubmit" data-i18n-login="registerBtn">Criar conta</button>
+                    <button type="submit" class="primary" id="registerSubmit" data-i18n-login="registerBtn">Create account</button>
                 </div>
                 <div class="login-toggle">
-                    <span data-i18n-login="hasAccount">Já tem conta?</span>
-                    <a href="#" id="toLogin" data-i18n-login="signIn">Entrar</a>
+                    <span data-i18n-login="hasAccount">Already have an account?</span>
+                    <a href="#" id="toLogin" data-i18n-login="signIn">Sign in</a>
                 </div>
             </form>
         </div>

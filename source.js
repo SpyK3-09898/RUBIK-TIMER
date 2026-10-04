@@ -32,9 +32,10 @@ const accentSwatchesEl = document.getElementById("accentSwatches");
 const loginScreen = document.getElementById("loginScreen");
 const loginForm = document.getElementById("loginForm");
 const registerForm = document.getElementById("registerForm");
-const loginUsername = document.getElementById("loginUsername");
+const loginEmail = document.getElementById("loginEmail");
 const loginPassword = document.getElementById("loginPassword");
-const registerUsername = document.getElementById("registerUsername");
+const registerEmail = document.getElementById("registerEmail");
+const registerDisplayName = document.getElementById("registerDisplayName");
 const registerPassword = document.getElementById("registerPassword");
 const loginError = document.getElementById("loginError");
 const registerError = document.getElementById("registerError");
@@ -58,16 +59,19 @@ let toastTimeout = null;
 let pausedElapsed = 0;
 let resumeCountdown = 3;
 let settingPauseKey = false;
-let currentUser = null;
+let currentUser = null; // email key
+let currentDisplayName = null;
 
 let allSolves = [];
 let scrambleHistory = [];
 let currentView = "session";
 let inspectionTime = 15;
-let language = "pt";
+let language = "en";
 let theme = "dark";
 let accent = "purple";
 let pauseKey = "p";
+
+const SUPPORTED_LANGS = ["en", "pt", "es"];
 
 const faces = ["R", "L", "U", "D", "F", "B"];
 const modifiers = ["", "'", "2"];
@@ -308,7 +312,8 @@ const translations = {
         loginTitle: "Entrar",
         registerTitle: "Criar conta",
         loginSub: "Seus dados ficam salvos neste dispositivo",
-        username: "Usuário",
+        email: "Email",
+        displayName: "Nome de exibição",
         password: "Senha",
         rememberMe: "Manter conectado",
         loginBtn: "Entrar",
@@ -317,10 +322,11 @@ const translations = {
         hasAccount: "Já tem conta?",
         createOne: "Criar uma",
         signIn: "Entrar",
-        userExists: "Esse usuário já existe.",
-        invalidLogin: "Usuário ou senha incorretos.",
+        userExists: "Esse email já está cadastrado.",
+        invalidLogin: "Email ou senha incorretos.",
         fillFields: "Preencha todos os campos.",
-        shortUser: "Usuário precisa ter pelo menos 3 caracteres.",
+        invalidEmail: "Email inválido.",
+        shortName: "Nome precisa ter pelo menos 2 caracteres.",
         shortPass: "Senha precisa ter pelo menos 4 caracteres."
     },
     en: {
@@ -393,7 +399,8 @@ const translations = {
         loginTitle: "Sign in",
         registerTitle: "Create account",
         loginSub: "Your data is stored on this device",
-        username: "Username",
+        email: "Email",
+        displayName: "Display name",
         password: "Password",
         rememberMe: "Stay signed in",
         loginBtn: "Sign in",
@@ -402,10 +409,11 @@ const translations = {
         hasAccount: "Already have an account?",
         createOne: "Create one",
         signIn: "Sign in",
-        userExists: "That username already exists.",
-        invalidLogin: "Invalid username or password.",
+        userExists: "That email is already registered.",
+        invalidLogin: "Invalid email or password.",
         fillFields: "Please fill in all fields.",
-        shortUser: "Username must be at least 3 characters.",
+        invalidEmail: "Invalid email.",
+        shortName: "Display name must be at least 2 characters.",
         shortPass: "Password must be at least 4 characters."
     },
     es: {
@@ -478,7 +486,8 @@ const translations = {
         loginTitle: "Iniciar sesión",
         registerTitle: "Crear cuenta",
         loginSub: "Tus datos se guardan en este dispositivo",
-        username: "Usuario",
+        email: "Email",
+        displayName: "Nombre visible",
         password: "Contraseña",
         rememberMe: "Mantener sesión",
         loginBtn: "Entrar",
@@ -487,10 +496,11 @@ const translations = {
         hasAccount: "¿Ya tienes cuenta?",
         createOne: "Crear una",
         signIn: "Entrar",
-        userExists: "Ese usuario ya existe.",
-        invalidLogin: "Usuario o contraseña incorrectos.",
+        userExists: "Ese email ya está registrado.",
+        invalidLogin: "Email o contraseña incorrectos.",
         fillFields: "Completa todos los campos.",
-        shortUser: "El usuario debe tener al menos 3 caracteres.",
+        invalidEmail: "Email inválido.",
+        shortName: "El nombre debe tener al menos 2 caracteres.",
         shortPass: "La contraseña debe tener al menos 4 caracteres."
     }
 };
@@ -525,12 +535,17 @@ function simpleHash(str) {
     return String(h);
 }
 
-function registerUser(username, password) {
+function isValidEmail(email) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+function registerUser(email, displayName, password) {
     const users = getUsers();
-    const key = username.trim().toLowerCase();
+    const key = email.trim().toLowerCase();
     if (users[key]) return { ok: false, error: "userExists" };
     users[key] = {
-        username: username.trim(),
+        email: key,
+        displayName: displayName.trim(),
         pass: simpleHash(password),
         created: Date.now()
     };
@@ -538,13 +553,20 @@ function registerUser(username, password) {
     return { ok: true };
 }
 
-function authenticate(username, password) {
+function authenticate(email, password) {
     const users = getUsers();
-    const key = username.trim().toLowerCase();
+    const key = email.trim().toLowerCase();
     const user = users[key];
     if (!user) return null;
     if (user.pass !== simpleHash(password)) return null;
-    return user.username;
+    return user;
+}
+
+function detectBrowserLanguage() {
+    const nav = (navigator.language || navigator.userLanguage || "en").toLowerCase();
+    const code = nav.split("-")[0];
+    if (SUPPORTED_LANGS.includes(code)) return code;
+    return "en";
 }
 
 function loadUserData() {
@@ -569,11 +591,14 @@ function loadUserData() {
 
     inspectionTime = Number(localStorage.getItem(storageKey("inspectionTime"))) || 15;
     pauseKey = localStorage.getItem(storageKey("pauseKey")) || "p";
-    language = localStorage.getItem(storageKey("language")) || localStorage.getItem("cubeTimer_global_language") || "pt";
+    language = localStorage.getItem(storageKey("language"))
+        || localStorage.getItem("cubeTimer_global_language")
+        || detectBrowserLanguage();
     theme = localStorage.getItem(storageKey("theme")) || localStorage.getItem("cubeTimer_global_theme") || "dark";
     accent = localStorage.getItem(storageKey("accent")) || localStorage.getItem("cubeTimer_global_accent") || "purple";
 
     if (!THEMES[accent]) accent = "purple";
+    if (!SUPPORTED_LANGS.includes(language)) language = "en";
     sessionSolves = [];
 }
 
@@ -589,12 +614,10 @@ function saveScrambleHistory() {
 
 function saveSession() {
     if (!currentUser) return;
-    if (rememberMe && rememberMe.checked) {
-        localStorage.setItem("cubeTimer_session", JSON.stringify({
-            user: currentUser,
-            ts: Date.now()
-        }));
-    }
+    localStorage.setItem("cubeTimer_session", JSON.stringify({
+        email: currentUser,
+        ts: Date.now()
+    }));
 }
 
 function clearSession() {
@@ -606,14 +629,15 @@ function tryAutoLogin() {
         const raw = localStorage.getItem("cubeTimer_session");
         if (!raw) return false;
         const data = JSON.parse(raw);
-        if (!data || !data.user) return false;
+        if (!data || !data.email) return false;
         const users = getUsers();
-        const key = data.user.toLowerCase();
+        const key = data.email.toLowerCase();
         if (!users[key]) {
             clearSession();
             return false;
         }
-        currentUser = users[key].username;
+        currentUser = key;
+        currentDisplayName = users[key].displayName || key;
         return true;
     } catch {
         clearSession();
@@ -624,7 +648,7 @@ function tryAutoLogin() {
 function showApp() {
     loginScreen.classList.add("hidden");
     appRoot.style.display = "";
-    userBadgeName.textContent = currentUser;
+    userBadgeName.textContent = currentDisplayName || currentUser;
     loadUserData();
     inspectionInput.value = inspectionTime;
     displayPauseKey();
@@ -640,6 +664,7 @@ function showLogin() {
     loginScreen.classList.remove("hidden");
     appRoot.style.display = "none";
     currentUser = null;
+    currentDisplayName = null;
     sessionSolves = [];
     allSolves = [];
     scrambleHistory = [];
@@ -651,6 +676,8 @@ function showLoginForm() {
     registerForm.style.display = "none";
     loginError.textContent = "";
     registerError.textContent = "";
+    const titleEl = document.getElementById("loginTitle");
+    if (titleEl) titleEl.textContent = t("loginTitle");
 }
 
 function showRegisterForm() {
@@ -658,6 +685,8 @@ function showRegisterForm() {
     registerForm.style.display = "";
     loginError.textContent = "";
     registerError.textContent = "";
+    const titleEl = document.getElementById("loginTitle");
+    if (titleEl) titleEl.textContent = t("registerTitle");
 }
 
 function initAudio() {
@@ -1685,18 +1714,23 @@ logoutBtn.addEventListener("click", event => {
 
 function handleLogin(event) {
     event.preventDefault();
-    const user = loginUsername.value.trim();
+    const email = loginEmail.value.trim();
     const pass = loginPassword.value;
-    if (!user || !pass) {
+    if (!email || !pass) {
         loginError.textContent = t("fillFields");
         return;
     }
-    const name = authenticate(user, pass);
-    if (!name) {
+    if (!isValidEmail(email)) {
+        loginError.textContent = t("invalidEmail");
+        return;
+    }
+    const user = authenticate(email, pass);
+    if (!user) {
         loginError.textContent = t("invalidLogin");
         return;
     }
-    currentUser = name;
+    currentUser = user.email;
+    currentDisplayName = user.displayName || user.email;
     if (rememberMe.checked) saveSession();
     else clearSession();
     showApp();
@@ -1704,26 +1738,32 @@ function handleLogin(event) {
 
 function handleRegister(event) {
     event.preventDefault();
-    const user = registerUsername.value.trim();
+    const email = registerEmail.value.trim();
+    const displayName = registerDisplayName.value.trim();
     const pass = registerPassword.value;
-    if (!user || !pass) {
+    if (!email || !displayName || !pass) {
         registerError.textContent = t("fillFields");
         return;
     }
-    if (user.length < 3) {
-        registerError.textContent = t("shortUser");
+    if (!isValidEmail(email)) {
+        registerError.textContent = t("invalidEmail");
+        return;
+    }
+    if (displayName.length < 2) {
+        registerError.textContent = t("shortName");
         return;
     }
     if (pass.length < 4) {
         registerError.textContent = t("shortPass");
         return;
     }
-    const result = registerUser(user, pass);
+    const result = registerUser(email, displayName, pass);
     if (!result.ok) {
         registerError.textContent = t(result.error);
         return;
     }
-    currentUser = user.trim();
+    currentUser = email.trim().toLowerCase();
+    currentDisplayName = displayName;
     const remember = document.getElementById("rememberMeReg");
     if (remember && remember.checked) saveSession();
     else clearSession();
@@ -1745,7 +1785,8 @@ document.getElementById("toLogin").addEventListener("click", event => {
 
 // Boot
 (function init() {
-    language = localStorage.getItem("cubeTimer_global_language") || "pt";
+    language = localStorage.getItem("cubeTimer_global_language") || detectBrowserLanguage();
+    if (!SUPPORTED_LANGS.includes(language)) language = "en";
     theme = localStorage.getItem("cubeTimer_global_theme") || "dark";
     accent = localStorage.getItem("cubeTimer_global_accent") || "purple";
     if (!THEMES[accent]) accent = "purple";
